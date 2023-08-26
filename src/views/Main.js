@@ -20,7 +20,7 @@ const Main = () => {
   ];
 
   // State to keep track of the currently displayed image index
-  const [currentImageIndex, setCurrentImageIndex] = useState(4);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   // State to trigger the reset of the Image component
   const [resetImage, setResetImage] = useState(false);
