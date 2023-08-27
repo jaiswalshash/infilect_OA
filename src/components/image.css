@@ -49,3 +49,38 @@
 .download-btn:hover {
     opacity: 1;
 }
+
+.icon-selector { 
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 10rem;
+    width: 10rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    row-gap: 0.3rem;
+    background-color: #DADADA;
+    border-radius: 10px;
+}
+
+.sqaure {
+    cursor: pointer;
+    width: auto;
+    height: auto;
+    z-index: 5;
+    padding-top: 1rem;
+    opacity: 0.5;
+}
+
+.sqaure:hover {
+    opacity: 1;
+}
+
+@media (max-width: 1100px) {
+    .icon-selector{
+        width: 7rem;
+        font-size: small;
+    }
+}

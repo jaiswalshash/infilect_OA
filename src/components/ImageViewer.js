@@ -1,24 +1,36 @@
 import React, { useState, useEffect } from "react";
-import { Rnd } from "react-rnd";
 import "./image.css";
 import Loader from "./Loader/Loader";
+import Box from "./BoundingBox/Bounding";
+import square from "../assets/square.png";
 
 const Image = (props) => {
   // State to reset the component
   const [resetCounter, setResetCounter] = useState(0);
-  
-    //For Loader
-    const [loader, setLoader] = useState(false); 
+
+  // For Loader
+  const [loader, setLoader] = useState(false);
 
   // State to reset coordinates
   const [resetCoordinates, setResetCoordinates] = useState(false);
-  
+
   // State to hold calculated coordinates
   const [topLeft, setTopLeft] = useState([0, 0]);
   const [topRight, setTopRight] = useState([0, 100]);
   const [bottomLeft, setBottomLeft] = useState([100, 0]);
   const [bottomRight, setBottomRight] = useState([100, 100]);
-  
+
+  // Number of bounding boxes
+  const [numBoxes, setNumBoxes] = useState(1);
+
+  // Adding a state to hold box coordinates
+  const [boxCoord, setBoxCoord] = useState(null);
+
+  // Function to add a new box
+  const addBox = () => {
+    setNumBoxes(numBoxes + 1);
+  };
+
   // State to hold calculated dimensions
   const [a, setA] = useState(null);
   const [b, setB] = useState(null);
@@ -47,7 +59,7 @@ const Image = (props) => {
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    border: "dashed 4px red", // Changed to dashed border
+    border: "dashed 4px red",
     background: "rgba(240, 240, 240, 0.5)",
   };
 
@@ -74,62 +86,76 @@ const Image = (props) => {
     setLoader(true);
     let parentDiv = document.getElementById("childDiv");
     const dimensions = parentDiv.getBoundingClientRect();
-    let child = document.getElementById("rnd-rct");
-    const childDimension = child.getBoundingClientRect();
 
-    let x1 = childDimension.x - dimensions.x;
-    let y1 = childDimension.y - dimensions.y;
-    let width = childDimension.width;
-    let height = childDimension.height;
+    // Collect all box coordinates
+    const boxCoordinates = [];
+    for (let index = 0; index < numBoxes; index++) {
+      let box = document.getElementById(`rct-rnd${index}`);
+      if (box) {
+        const boxDimension = box.getBoundingClientRect();
+        let x1 = boxDimension.x - dimensions.x;
+        let y1 = boxDimension.y - dimensions.y;
+        let width = boxDimension.width;
+        let height = boxDimension.height;
 
-    setTopLeft([x1, y1]);
-    setTopRight([x1 + width, y1]);
-    setBottomLeft([x1, y1 + height]);
-    setBottomRight([x1 + width, y1 + height]);
+        boxCoordinates.push({
+          x1,
+          y1,
+          x2: x1 + width,
+          y2: y1 + height,
+        });
+      }
+    }
+
+    // Set box coordinates state
+    setBoxCoord(boxCoordinates);
 
     setTimeout(() => {
-        alert("Changes Saved!")
-        setLoader(false);
-      }, 1000); 
+      alert("Changes Saved!");
+      setLoader(false);
+    }, 1000);
   };
 
   // Function to handle downloading JSON data
   const handleDownload = () => {
     setLoader(true);
-    const jsonData = {
-      [props.imageID]: [
-        {
-          x1: topLeft,
-          y1: topRight,
-          x2: bottomLeft,
-          y2: bottomRight,
-        },
-      ],
-    };
-  
+    let jsonData = {};
+
+    if (boxCoord) {
+      jsonData = {
+        [props.imageID]: boxCoord,
+      };
+    }
+
     const blob = new Blob([JSON.stringify(jsonData)], {
       type: "application/json",
     });
-  
+
     const url = URL.createObjectURL(blob);
-  
+
     const a = document.createElement("a");
     a.href = url;
-    a.download = `${props.imageID}.json`;
-  
+    a.download = `${props.imageID}_boxes.json`;
+
     // Set a timeout of 3 seconds before starting the download
     setTimeout(() => {
       a.click();
       setLoader(false);
       URL.revokeObjectURL(url);
-    }, 3000); 
+    }, 3000);
   };
-  
 
   return (
     <div id="parentDiv" className="parentDivClass" style={parentDivStyle}>
-        {loader && <Loader/>}
+      {loader && <Loader />}
       <div className="heading">{props.imageID}</div>
+      <div className="icon-selector">
+        Click on the Shape!
+        <hr style={{ width: "97%" }} />
+        <div className="sqaure">
+          <img width={50} onClick={addBox} src={square} alt="" />
+        </div>
+      </div>
       <img
         style={{ width: "70%", height: "80%" }}
         id="childDiv"
@@ -137,22 +163,17 @@ const Image = (props) => {
         src={props.image}
         alt="fq"
       />
-      {a && b && (
-        <Rnd
-          id="rnd-rct"
-          style={style}
-          bounds=".childDivClass"
-          default={{
-            x: a,
-            y: b,
-            width: 100,
-            height: 100,
-          }}
-        ></Rnd>
-      )}
+      {a && b &&
+        Array.from({ length: numBoxes }).map((_, index) => (
+          <Box key={index} a={a} b={b} id={`rct-rnd${index}`} />
+        ))}
       <div className="buttons">
-        <button className="save-btn" onClick={handleSave}>Save</button>
-        <button className="download-btn" onClick={handleDownload}>Download</button>
+        <button className="save-btn" onClick={handleSave}>
+          Save
+        </button>
+        <button className="download-btn" onClick={handleDownload}>
+          Download
+        </button>
       </div>
     </div>
   );
